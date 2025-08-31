@@ -104,16 +104,18 @@ impl Client {
                 .with_no_client_auth();
             let server_name = host.to_string().try_into()?;
             let mut conn = rustls::ClientConnection::new(Arc::new(config), server_name)?;
-            let stream = rustls::Stream::new(&mut conn, &mut stream);
+            let mut stream = rustls::Stream::new(&mut conn, &mut stream);
 
-            let result = do_read_write(stream, &request_bytes, &mut response_bytes);
+            stream.write_all(&request_bytes)?;
+            let result = stream.read_to_end(&mut response_bytes);
             if let Err(error) = &result {
                 if error.kind() != std::io::ErrorKind::UnexpectedEof {
                     result?;
                 }
             }
         } else {
-            do_read_write(stream, &request_bytes, &mut response_bytes)?;
+            stream.write_all(&request_bytes)?;
+            stream.read_to_end(&mut response_bytes)?;
         }
 
         println!();
@@ -126,20 +128,6 @@ impl Client {
         let response = Response::parse(&response_bytes)?;
         Ok(response)
     }
-}
-
-fn do_read_write<S>(
-    mut stream: S,
-    request_bytes: &[u8],
-    response_bytes: &mut Vec<u8>,
-) -> std::io::Result<()>
-where
-    S: Read + Write,
-{
-    stream.write_all(request_bytes)?;
-    //stream.flush()?;
-    stream.read_to_end(response_bytes)?;
-    Ok(())
 }
 
 #[derive(Clone, Default)]
