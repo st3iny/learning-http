@@ -1,6 +1,5 @@
 use std::{
     collections::BTreeMap,
-    fmt::Display,
     io::{Read, Write},
     net::{TcpStream, ToSocketAddrs},
     sync::Arc,
@@ -166,16 +165,6 @@ impl Headers {
 
     pub fn iter(&self) -> impl Iterator<Item = (&String, &String)> {
         self.0.iter()
-    }
-}
-
-impl Display for Headers {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        for (key, value) in &self.0 {
-            write!(f, "{key}: {value}\r\n")?;
-        }
-
-        Ok(())
     }
 }
 
